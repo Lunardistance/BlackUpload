@@ -7,7 +7,7 @@
  * @package Blackupload
  * @author Black.Hacker <farisksa79@protonmail.com>
  * @license MIT
- * @link https://github.com/BlackHacker511/BlackUpload
+ * @link https://github.com/FarisCode511/BlackUpload
  */
 namespace BlackUpload;
 
@@ -41,10 +41,13 @@ final class Upload
         5 => "Please select a file",
         6 => "File already exist.",
         7 => "Failed to move uploaded file.",
-        8 => "The uploaded file's height is too large. or The uploaded file's width is too large.",
-        9 => "The uploaded file's height is too small. or The uploaded file's width is too small.",
-        10 => "The uploaded file is not a valid image.",
-        11 => "Opreation does not exist.",
+        8 => "The uploaded file's height is too large.",
+        9 => "The uploaded file's width is too large.",
+        10 => "The uploaded file's height is too small.",
+        11 => "The uploaded file's width is too small.",
+        12 => "The uploaded file's is too small.",
+        13 => "The uploaded file is not a valid image.",
+        14 => "Opreation does not exist.",
     ]; // Array list of error codes and the messages
 
     /** Class Constructor to initialize attributes
@@ -1117,7 +1120,7 @@ final class Upload
                 if ($width <= $this->max_width) {
                     return true;
                 } else {
-                    $this->add_log(null, ['filename' => $this->getName(), "message" => 8]);
+                    $this->add_log(null, ['filename' => $this->getName(), "message" => 9]);
                 }
                 break;
 
@@ -1133,7 +1136,7 @@ final class Upload
                 if ($height >= $this->min_height) {
                     return true;
                 } else {
-                    $this->add_log(null, ['filename' => $this->getName(), "message" => 9]);
+                    $this->add_log(null, ['filename' => $this->getName(), "message" => 10]);
                 }
                 break;
 
@@ -1141,7 +1144,7 @@ final class Upload
                 if ($width >= $this->min_width) {
                     return true;
                 } else {
-                    $this->add_log(null, ['filename' => $this->getName(), "message" => 9]);
+                    $this->add_log(null, ['filename' => $this->getName(), "message" => 11]);
                 }
                 break;
 
@@ -1149,12 +1152,12 @@ final class Upload
                 if ($width >= $this->min_width && $height >= $this->min_height) {
                     return true;
                 } else {
-                    $this->add_log(null, ['filename' => $this->getName(), "message" => 9]);
+                    $this->add_log(null, ['filename' => $this->getName(), "message" => 12]);
                 }
                 break;
 
             default:
-                $this->add_log(null, ['filename' => $this->getName(), "message" => 11]);
+                $this->add_log(null, ['filename' => $this->getName(), "message" => 14]);
                 break;
         }
     }
@@ -1199,7 +1202,7 @@ final class Upload
         if (in_array($this->getMime(), ['image/gif', 'image/jpeg', 'image/pjpeg', 'image/png'])) {
             return true;
         } else {
-            $this->add_log(null, ['filename' => $this->getName(), "message" => 10]);
+            $this->add_log(null, ['filename' => $this->getName(), "message" => 13]);
         }
     }
 
