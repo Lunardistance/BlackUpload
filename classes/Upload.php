@@ -14,24 +14,122 @@ namespace BlackUpload;
 final class Upload
 {
     /* Class attributes */
-    private $upload_input; // HTML File Input => Example: $_FILES['file']
+
+    /**
+     * HTML File Input => Example: $_FILES['file']
+     *
+     * @var $upload_input
+     */
+    private $upload_input;
+
+    /**
+     * Array For File name Protection
+     *
+     * @var array $name_array
+     */
     private $name_array = []; // Array For File name Protection
-    private $ext_array = []; // Array For Extension Protection
-    private $mime_array = []; // Array For Mime Types Protection
-    private $controller; // Class Controller Path
-    private $upload_controller; // File Upload Controller
-    private $upload_folder; // Example: /upload
-    private $size; // Size limit for protection
-    private $use_hash; // Use hashed name insted of the uploaded file name
-    private $file_id; // File ID for the database
-    private $user_id; // User ID for the database
-    private $logs = []; // System Logs Array
-    private $overwrite_file; // Enable or Disable file overwriting
-    private $files = []; // Array for the all uploaded files informations
-    private $max_height; // Image max height
-    private $max_width; // Image max width
+
+    /**
+     * Array For Extension Protection
+     *
+     * @var array $ext_array
+     */
+    private $ext_array = [];
+    /**
+     * Array For Mime Types Protection
+     *
+     * @var array $mime_array
+     */
+    private $mime_array = [];
+    /**
+     * Class Controller Path
+     *
+     * @var string $controller
+     */
+    private $controller;
+    /**
+     * File Upload Controller
+     *
+     * @var string $upload_controller
+     */
+    private $upload_controller;
+    /**
+     * Array For the upload folder data Example: ["folder_name" => "upload", "folder_path" => "upload/"]
+     *
+     * @var array $upload_folder
+     */
+    private $upload_folder = [];
+    /**
+     * Size limit for protection
+     *
+     * @var integer $size
+     */
+    private $size;
+    /**
+     * Use hashed name insted of the uploaded file name
+     *
+     * @var boolean $use_hash
+     */
+    private $use_hash;
+    /**
+     * File ID for the database
+     *
+     * @var string file_id
+     */
+    private $file_id;
+    /**
+     * User ID for the database
+     *
+     * @var string $user_id
+     */
+    private $user_id;
+    /**
+     * System Logs Array
+     *
+     * @var array $logs
+     */
+    private $logs = [];
+    /**
+     * Enable or Disable file overwriting
+     *
+     * @var bool $overwrite_file
+     */
+    private $overwrite_file;
+    /**
+     * Array for the all uploaded files informations
+     *
+     * @var array $files
+     */
+    private $files = [];
+    /**
+     * Image max height
+     *
+     * @var integer $max_height
+     */
+    private $max_height;
+    /**
+     * Image max width
+     *
+     * @var integer $max_width
+     */
+    private $max_width;
+    /**
+     * Image minimum height
+     *
+     * @var integer $min_height
+     */
     private $min_height;
+    /**
+     * Image minimum width
+     *
+     * @var integer $min_width
+     */
     private $min_width;
+    /**
+     * Array list of error codes and the messages
+     *
+     * @var array $message
+     */
     private $message = [
         0 => "File has been uploaded.",
         1 => "Invalid file format.",
@@ -48,7 +146,7 @@ final class Upload
         12 => "The uploaded file's is too small.",
         13 => "The uploaded file is not a valid image.",
         14 => "Opreation does not exist.",
-    ]; // Array list of error codes and the messages
+    ];
 
     /** Class Constructor to initialize attributes
      *
@@ -67,11 +165,11 @@ final class Upload
      * @return null
      *
      */
-    public function __construct($upload_input = null, $upload_folder = "upload", $controller = null, $upload_controller = "upload.php", $size = "1 GB", $use_hash = false, $overwrite_file = true, $max_height = null, $max_width = null, $min_height = null, $min_width = null, $file_id = null, $user_id = null)
+    public function __construct($upload_input = null, $upload_folder = [], $controller = null, $upload_controller = "upload.php", $size = "1 GB", $use_hash = false, $overwrite_file = true, $max_height = null, $max_width = null, $min_height = null, $min_width = null, $file_id = null, $user_id = null)
     {
         // initialize attributes
         $this->upload_input = $upload_input; // Set file input
-        $this->upload_folder = $this->sanitize($upload_folder); // Set upload folder
+        $this->upload_folder = $upload_folder; // Set upload folder
         $this->controller = $this->sanitize($controller); // Set the class controller folder
         $this->upload_controller = $this->sanitize($upload_controller); // Set the upload controller | Example => upload.php
         $this->size = $this->sizeInBytes($this->sanitize($size)); // Set limit Size
@@ -238,7 +336,7 @@ final class Upload
      */
     public function setUploadFolder($folder_name)
     {
-        $this->upload_folder = $this->sanitize($folder_name); // Sanitize and set the upload folder when needed
+        $this->upload_folder = $folder_name; // Sanitize and set the upload folder when needed
     }
 
     /** Firewall 1: Check File Extension
@@ -285,11 +383,17 @@ final class Upload
      */
     public function checkMime()
     {
+        // Get the file mime type using the browser
+        $mime = mime_content_type($this->getTempName());
+
         // Check if the file mime type is whitelisted
-        if (in_array($this->getMime(), $this->mime_array)) {
-            return true; // Return true if the mime type is not blacklisted
-        } else {
-            $this->add_log(null, ['filename' => $this->getName(), "message" => 1]); // Show an error message
+        if (in_array($mime, $this->mime_array)) {
+            // Check if the browser mime type equals the server mime type
+            if ($mime == $this->getMime()) {
+                return true; // Return true if the mime type is not blacklisted
+            } else {
+                $this->add_log(null, ['filename' => $this->getName(), "message" => 1]); // Show an error message
+            }
         }
     }
 
@@ -369,7 +473,7 @@ final class Upload
         return $this->fixIntegerOverflow($this->upload_input['size']);
     }
 
-    /** Function to check if a the HTML input is empty
+    /** Function to check if the HTML input is empty
      *
      * name: checkIfEmpty
      * @param null
@@ -379,7 +483,7 @@ final class Upload
     public function checkIfEmpty()
     {
         // check if a the HTML input is empty
-        if ($this->upload_input['error'] === UPLOAD_ERR_NO_FILE) {
+        if ($this->upload_input['error'] == UPLOAD_ERR_NO_FILE) {
             $this->add_log(null, ['filename' => $this->getName(), "message" => 5]); // Return false if the input is empty
         } else {
             return true; // Return true if the input has a file
@@ -486,7 +590,7 @@ final class Upload
             isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 'https' : 'http', // check if the website is using SSL or not
             $_SERVER['SERVER_NAME'], // get the website url
             dirname($_SERVER['REQUEST_URI']), // get the requested url base dir name
-            $this->upload_folder, // Get the upload folder
+            $this->upload_folder['folder_name'], // Get the upload folder
             $filename // Get the uploaded file name
         ); // Format String as the download link example => http://localhost/up/upload/filename.txt
     }
@@ -556,7 +660,7 @@ final class Upload
         return '
         <form class="upload_form" action="' . $this->upload_controller . '" method="post" enctype="multipart/form-data">
 			<input type="hidden" name="MAX_FILE_SIZE" value="30000" />
-            <input class="upload_input" type="file" name="file" id="file" ' . $multiple . ' />
+            <input class="upload_input" type="file" name="file" ' . $multiple . ' />
             <button  name="upload" class="upload_button" type="submit">Upload</button>
         </form>
         ';
@@ -577,7 +681,7 @@ final class Upload
             // Upload Form Code
             $form .= '
             <div class="container">
-                <input class="upload_input" type="file" name="file[]" id="file[]">
+                <input class="upload_input" type="file" name="file[]">
             </div>
             ';
         }
@@ -631,9 +735,9 @@ final class Upload
             $this->hashName() . "." . $this->getExtension() :
             $this->getName());
         // Check if OverWrite setting is enabled
-        if (!($this->overwrite_file === true)) {
+        if (!($this->overwrite_file == true)) {
             // Check if the is uploaded to the server
-            if ($this->isFile($this->upload_folder . "/" . $filename) === false) {
+            if ($this->isFile($this->upload_folder['folder_path'] . "/" . $filename) == false) {
                 // Function to move the file to the upload folder
                 if ($this->move_file($filename)) {
                     $this->add_log(null, ['filename' => $this->getName(), "message" => 0]);
@@ -669,7 +773,7 @@ final class Upload
         $chunk_size = 1024;
         $upload_start = 0;
         $handle = fopen($this->getTempName(), "rb");
-        $fp = fopen($this->upload_folder . "/" . $filename, 'w');
+        $fp = fopen($this->upload_folder['folder_path'] . "/" . $filename, 'w');
 
         while ($upload_start < $orig_file_size) {
 
@@ -714,7 +818,7 @@ final class Upload
         return $file_array;
     }
 
-    /** Function to create and upload folder and secure it
+    /** Function to create an upload folder and secure it
      *
      * name: create_upload_folder
      * @param string $folder_name
@@ -824,7 +928,7 @@ final class Upload
      */
     public function getUploadDirFiles()
     {
-        return scandir($this->upload_folder);
+        return scandir($this->upload_folder['folder_path']);
     }
 
     /** Check if a file exist and it is a real file
@@ -896,7 +1000,7 @@ final class Upload
     public function add_log($id = null, $message)
     {
         // Check if $id is null
-        if ($id === null) {
+        if ($id == null) {
             array_push($this->logs, $message); // yes then just push the message
         } else {
             $this->logs[$id] = $message; # // no then add the message to the custom $id
@@ -1069,13 +1173,17 @@ final class Upload
      */
     public function factory($upload_input = null, $size_limit = null)
     {
-        $this->setUploadFolder("uploads"); // set upload folder to "upload"
+        // set upload folder to "upload"
+        $this->setUploadFolder([
+            "folder_name" => "uploads",
+            "folder_path" => \realpath("uploads"),
+        ]);
         $this->setFileOverwriting(true); // Set file overwriting to true
         $this->useHashAsName(false); // Set using hash name to false to use the file real name
         $this->enableProtection(); // Enable class 3 firewall levels
         $this->file_id = $this->generateUniqeID();
         $this->user_id = $this->generateUniqeID("user-");
-        if ($upload_input === null) {
+        if ($upload_input == null) {
             $this->setUpload($_FILES['file']); // check if $upload_input is null then set the upload input to $_FILES['file']
         } else {
             $this->setUpload($upload_input); // else set the upload input to your defined input
